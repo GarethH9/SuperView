@@ -1,0 +1,3 @@
+﻿SuperViewTest
+SQLSERVER
+Data Source=(local);Initial Catalog=SuperView;User id=sa;Password=Pa55w0rd;

@@ -1,0 +1,6 @@
+c:\users\ghandley\documents\visual studio 2012\Projects\SuperView_console\SuperView_console\bin\Debug\SuperView_console.exe.config
+c:\users\ghandley\documents\visual studio 2012\Projects\SuperView_console\SuperView_console\obj\Debug\SuperView_console.csprojResolveAssemblyReference.cache
+c:\users\ghandley\documents\visual studio 2012\Projects\SuperView_console\SuperView_console\bin\Debug\SuperView_console.exe
+c:\users\ghandley\documents\visual studio 2012\Projects\SuperView_console\SuperView_console\bin\Debug\SuperView_console.pdb
+c:\users\ghandley\documents\visual studio 2012\Projects\SuperView_console\SuperView_console\obj\Debug\SuperView_console.exe
+c:\users\ghandley\documents\visual studio 2012\Projects\SuperView_console\SuperView_console\obj\Debug\SuperView_console.pdb
