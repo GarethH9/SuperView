@@ -112,7 +112,16 @@ namespace SuperView_console
             // Create a new SQLSERVER wrapper
             WrapperSQLSERVER SuperViewTest = new WrapperSQLSERVER("SuperViewTest", "Data Source=(local);Initial Catalog=SuperView;User id=sa;Password=Pa55w0rd;");
 
-
+            //Write the new datasource to the database
+            Console.WriteLine("Storing data source information...");
+            bool success = Utilities.storeDataSource("SuperViewTest", "Data Source=(local);Initial Catalog=SuperView;User id=sa;Password=Pa55w0rd;", "WrapperSQLSERVER");
+            Console.WriteLine("Data source added to database: " + success.ToString());
+            Console.WriteLine("");
+            Console.WriteLine("Data sources stored in system:");
+            DataTable results = Utilities.getAllDataSources();
+            DisplayDataTable(results);
+            Console.WriteLine("");
+            Console.WriteLine(Utilities.getDataSourceID("SuperViewTest").ToString());    
 
         }
 

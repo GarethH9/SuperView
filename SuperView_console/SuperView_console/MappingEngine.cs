@@ -15,11 +15,7 @@ namespace SuperView_console
         {
             return wrapper.query(query);
         }
-        
-        // Generate a blank XML
  
-
-
         //Get fields from data source
 
         //Create relationship
