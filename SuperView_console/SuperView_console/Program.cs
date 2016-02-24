@@ -150,7 +150,7 @@ namespace SuperView_console
             {
                 Wrapper wrapper = dataSource.Value;
                 
-                Console.WriteLine("Data Source: " + wrapper.getName());
+                Console.WriteLine("Data Source: " + wrapper.getName() + " (ID: " + wrapper.getID().ToString() + ")");
                 Console.Write("Would you like to configure mappings for this data source? (Y/N): ");
 
                 string value = Console.ReadLine();

@@ -29,6 +29,12 @@ namespace SuperView_console
             return dataSourceName;
         }
 
+        // Getter for the data source ID
+        public int getID()
+        {
+            return dataSourceID;
+        }
+
         // Getter for the connection string of the wrapper
         public string getConnectionString()
         {
