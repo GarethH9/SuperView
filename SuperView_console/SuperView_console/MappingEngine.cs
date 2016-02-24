@@ -17,7 +17,7 @@ namespace SuperView_console
         }
 
         // Store a table in the mapping engine
-        public static bool storeTable(Wrapper wrapper, string tableName)
+        public static bool mapTable(Wrapper wrapper, string tableName)
         {
             return Utilities.storeTable(wrapper.getName(), tableName);
         }
@@ -46,7 +46,7 @@ namespace SuperView_console
             // Loop through the tables and add them to the mapping engine
             foreach (string table in wrapper.getTables())
             {
-                storeTable(wrapper, table);
+                mapTable(wrapper, table);
             }
         }
 

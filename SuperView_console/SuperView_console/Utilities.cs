@@ -67,8 +67,8 @@ namespace SuperView_console
             // Set up a new connection to the local db and connect
             SqlCeConnection dbConnection = connectToLocalDatabase();
 
-            // Check that this data source doesn't already exist
-            if (getDataSourceTables(dataSourceName).Rows.Count > 0)
+            // Check that this table doesn't already exist
+            if (getTable(dataSourceName, tableName).Rows.Count > 0)
             {
                 return false;
             }
@@ -186,6 +186,18 @@ namespace SuperView_console
             return getLocalDatabaseData(dbCmd);
         }
 
+        // Get the text name of a data source by the id
+        public static string getDataSourceName(int id)
+        {
+            SqlCeCommand dbCmd = new SqlCeCommand("SELECT * FROM DataSources WHERE ID = @ID");
+            dbCmd.Parameters.AddWithValue("ID", id);
+            DataTable results = getLocalDatabaseData(dbCmd);
+
+            string name = results.Rows[0]["Name"].ToString();
+
+            return name;
+        }
+
         /********************************************************
          * TABLES
          ******************************************************** */
@@ -222,6 +234,18 @@ namespace SuperView_console
             dbCmd.Parameters.AddWithValue("DataSource", getDataSourceID(dataSourceName));
 
             return getLocalDatabaseData(dbCmd);
+        }
+
+        // Get the text name of a table by id
+        public static string getTableName(int id)
+        {
+            SqlCeCommand dbCmd = new SqlCeCommand("SELECT * FROM DataSourceTables WHERE ID = @ID");
+            dbCmd.Parameters.AddWithValue("ID", id);
+            DataTable results = getLocalDatabaseData(dbCmd);
+
+            string name = results.Rows[0]["Name"].ToString();
+
+            return name;
         }
 
         /********************************************************

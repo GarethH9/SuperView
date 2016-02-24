@@ -164,18 +164,26 @@ namespace SuperView_console
                     // Give the user the option to preserve table mappings
                     if (MappingEngine.getMappedTables(wrapper).Rows.Count > 0)
                     {
-                        Console.Write("Table mappings already exist for this data source, would you like to update these? (Y/N): ");
-                        value = Console.ReadLine();
-
-                        if (value.ToString().ToLower() == "y")
-                        {
-                            MappingEngine.mapDataSourceTables(wrapper);
-                            Console.WriteLine(MappingEngine.getMappedTables(wrapper).Rows.Count.ToString() + " table(s) mapped");
-                        }
+                        Console.WriteLine("Table mappings already exist for '" + wrapper.getName() + "'");
                     }
                     else
                     {
-                        MappingEngine.mapDataSourceTables(wrapper);
+                        // Loop through the tables
+                        foreach (string table in wrapper.getTables())
+                        {
+                            // Ask the user if they want to map the table
+                            Console.Write("Would you like to map the '" + table + "' table? (Y/N): ");
+                            string response = Console.ReadLine().ToString();
+
+                            // If they do then map the table
+                            if (response.ToLower() == "y")
+                            {
+                                MappingEngine.mapTable(wrapper, table);
+                                Console.WriteLine(table);
+                            }
+                        }
+
+                        // Display how many tables we have mapped in this data source
                         Console.WriteLine(MappingEngine.getMappedTables(wrapper).Rows.Count.ToString() + " table(s) mapped");
                     }
 
@@ -184,9 +192,11 @@ namespace SuperView_console
                     // Map the fields
                     Console.WriteLine("Mapping fields...");
 
-                    // Loop through every table
-                    foreach (string table in wrapper.getTables())
+                    // Loop through every table that we have mapped for this data source
+                    foreach (DataRow mapping in MappingEngine.getMappedTables(wrapper).Rows)
                     {
+                        string table = mapping["Name"].ToString();
+                        
                         // Check if there are any mappings for this table, if there are then we can't change them
                         if (MappingEngine.getMappings(wrapper, table).Rows.Count > 0)
                         {
@@ -220,8 +230,18 @@ namespace SuperView_console
         // Function to use SuperView once initialised
         public static void useSuperView()
         {
-            // Display all available mappings
-            DisplayDataTable(MappingEngine.getMappings());
+            Console.WriteLine("");
+            
+            // Get all of the mappings we have produced
+            DataTable mappings = MappingEngine.getMappings();
+
+            // Display the mappings
+            foreach (DataRow mapping in mappings.Rows)
+            {
+                string dataSourceName = Utilities.getDataSourceName((int)mapping["sourceDataSource"]);
+                string tableName = Utilities.getTableName((int)mapping["sourceTable"]);
+                Console.WriteLine(mapping["targetName"].ToString() + " (Data Source: " + dataSourceName + "| Table: " + tableName + ")");
+            }
         }
 
         // Function to reset SuperView
@@ -243,6 +263,8 @@ namespace SuperView_console
             // Add data sources to the local database
             Utilities.storeDataSource("SuperViewTest", "Data Source=(local);Initial Catalog=SuperView;User id=sa;Password=Pa55w0rd;", "WrapperSQLSERVER");
 
+            Utilities.storeDataSource("PatientMealChoices", "Data Source=(local);Initial Catalog=PatientMealChoices;User id=sa;Password=Pa55w0rd;", "WrapperSQLSERVER");
+
         }
 
         public static void createDataSourceObjects()
@@ -256,7 +278,7 @@ namespace SuperView_console
                 // Create a new object
 
                 // Get the type of object (wrapper) to create
-                Type elementType = Type.GetType("SuperView_console.WrapperSQLSERVER",true);
+                Type elementType = Type.GetType("SuperView_console." + row["Wrapper"].ToString(),true);
                 Object wrapper = Activator.CreateInstance(elementType, row["Name"].ToString(), row["ConnectionString"].ToString(), Int32.Parse(row["ID"].ToString()));
 
                 // Add the object to the dictionary (if it already exists then overwrite)
