@@ -12,7 +12,7 @@ namespace SuperView_console
     {
         // Private variable to hold a connection object of the relevant type
 
-        public WrapperGENERIC(string newDataSourceName, string newConnectionString) : base(newDataSourceName, newConnectionString)
+        public WrapperGENERIC(string newDataSourceName, string newConnectionString, int newDataSourceID = -1) : base(newDataSourceName, newConnectionString, newDataSourceID)
         {
             // Build your conection object
             // Try to use other wrapper methods (e.g. this.getConnectionString() to do this)

@@ -12,6 +12,8 @@ namespace SuperView_console
     class Program
     {
         public static bool debug = true;
+
+        public static Dictionary<string, Wrapper> dataSources = new Dictionary<string, Wrapper>();
         
         static void Main(string[] args)
         {
@@ -30,7 +32,9 @@ namespace SuperView_console
             Console.WriteLine("1. System demo");
             Console.WriteLine("2. System test");
             Console.WriteLine("3. Start system");
-            Console.WriteLine("4. Exit");
+            Console.WriteLine("4. Use Superview");
+            Console.WriteLine("5. Reset");
+            Console.WriteLine("6. Exit");
             Console.Write("Please enter a number: ");
 
             switch (Console.ReadLine())
@@ -51,6 +55,14 @@ namespace SuperView_console
                     showMenu();
                     break;
                 case "4":
+                    useSuperView();
+                    showMenu();
+                    break;
+                case "5":
+                    reset();
+                    showMenu();
+                    break;
+                case "6":
                     exitSystem();
                     break;
                 default:
@@ -98,6 +110,21 @@ namespace SuperView_console
 
             Console.WriteLine("");
 
+            // GET COLUMNS TEST
+            Console.WriteLine("GET COLUMNS TEST");
+            Dictionary<string, string> columns = SuperViewTest.getColumns("Test");
+
+            // Display the columns
+            foreach (KeyValuePair<string, string> column in columns)
+            {
+                Console.WriteLine("Column Name: " + column.Key.ToString() + " Data Type: " + column.Value.ToString());
+            }
+            //DisplayDataTable(columns);
+
+            // END GET COLUMNS TEST
+
+            Console.WriteLine("");
+
             //MAPPING ENGINE TEST
             Console.WriteLine("MAPPING ENGINE TEST");
             results = MappingEngine.queryWrapper(SuperViewTest, "SELECT * FROM Test");
@@ -109,20 +136,139 @@ namespace SuperView_console
 
         static void startSuperView()
         {
-            // Create a new SQLSERVER wrapper
-            WrapperSQLSERVER SuperViewTest = new WrapperSQLSERVER("SuperViewTest", "Data Source=(local);Initial Catalog=SuperView;User id=sa;Password=Pa55w0rd;");
+            Console.WriteLine("Loading data source configurations...");
 
-            //Write the new datasource to the database
-            Console.WriteLine("Storing data source information...");
-            bool success = Utilities.storeDataSource("SuperViewTest", "Data Source=(local);Initial Catalog=SuperView;User id=sa;Password=Pa55w0rd;", "WrapperSQLSERVER");
-            Console.WriteLine("Data source added to database: " + success.ToString());
-            Console.WriteLine("");
-            Console.WriteLine("Data sources stored in system:");
-            DataTable results = Utilities.getAllDataSources();
-            DisplayDataTable(results);
-            Console.WriteLine("");
-            Console.WriteLine(Utilities.getDataSourceID("SuperViewTest").ToString());    
+            // Load the data source definitions and create the required objects
+            loadDataSourceDefinitions();
+            createDataSourceObjects();
+            Console.WriteLine(dataSources.Count().ToString() + " data source(s) loaded");
 
+            Console.WriteLine("");
+
+            // Loop through each of the data sources
+            foreach (KeyValuePair<string, Wrapper> dataSource in dataSources)
+            {
+                Wrapper wrapper = dataSource.Value;
+                
+                Console.WriteLine("Data Source: " + wrapper.getName());
+                Console.Write("Would you like to configure mappings for this data source? (Y/N): ");
+
+                string value = Console.ReadLine();
+
+                // Perform the mappings
+                if (value.ToString().ToLower() == "y")
+                {
+                    // Map the tables
+                    Console.WriteLine("Mapping tables...");
+                    
+                    // Give the user the option to preserve table mappings
+                    if (MappingEngine.getMappedTables(wrapper).Rows.Count > 0)
+                    {
+                        Console.Write("Table mappings already exist for this data source, would you like to update these? (Y/N): ");
+                        value = Console.ReadLine();
+
+                        if (value.ToString().ToLower() == "y")
+                        {
+                            MappingEngine.mapDataSourceTables(wrapper);
+                            Console.WriteLine(MappingEngine.getMappedTables(wrapper).Rows.Count.ToString() + " table(s) mapped");
+                        }
+                    }
+                    else
+                    {
+                        MappingEngine.mapDataSourceTables(wrapper);
+                        Console.WriteLine(MappingEngine.getMappedTables(wrapper).Rows.Count.ToString() + " table(s) mapped");
+                    }
+
+                    Console.WriteLine("");
+
+                    // Map the fields
+                    Console.WriteLine("Mapping fields...");
+
+                    // Loop through every table
+                    foreach (string table in wrapper.getTables())
+                    {
+                        // Check if there are any mappings for this table, if there are then we can't change them
+                        if (MappingEngine.getMappings(wrapper, table).Rows.Count > 0)
+                        {
+                            Console.WriteLine("Mappings already exist for the '" + table + "' table.");
+                        }
+                        else
+                        {
+                            // Loop through each column in the data source
+                            foreach (KeyValuePair<string, string> column in wrapper.getColumns(table))
+                            {
+                                Console.WriteLine("Column Name: " + column.Key.ToString() + " | Data Type: " + column.Value.ToString());
+                                Console.Write("Enter a mapping name for this column (leave blank to ignore): ");
+                                string mappingName = Console.ReadLine().ToString();
+
+                                // If we entered a mapping name then add the mapping to the database
+                                if (mappingName != "")
+                                {
+                                    MappingEngine.mapField(wrapper, table, column.Key.ToString(), column.Value.ToString(), mappingName);
+                                }
+
+                                Console.WriteLine("");
+                            }
+                            Console.WriteLine(MappingEngine.getMappings(wrapper, table).Rows.Count.ToString() + " field(s) mapped");
+                        }
+                    }
+
+                }
+            }
+        }
+
+        // Function to use SuperView once initialised
+        public static void useSuperView()
+        {
+            // Display all available mappings
+            DisplayDataTable(MappingEngine.getMappings());
+        }
+
+        // Function to reset SuperView
+        public static void reset()
+        {
+            // Empty the dataSources dictionary
+            dataSources = new Dictionary<string, Wrapper>();
+
+            // Reset the local database
+            Utilities.resetLocalDatabase();
+
+            Console.WriteLine("SuperView reset!");
+            Console.WriteLine("");
+        }
+
+        // Function to load all of the data source configurations from text files
+        public static void loadDataSourceDefinitions()
+        {
+            // Add data sources to the local database
+            Utilities.storeDataSource("SuperViewTest", "Data Source=(local);Initial Catalog=SuperView;User id=sa;Password=Pa55w0rd;", "WrapperSQLSERVER");
+
+        }
+
+        public static void createDataSourceObjects()
+        {
+            // Get all the data sources in the system
+            DataTable dt = Utilities.getAllDataSources();
+
+            // Loop through each
+            foreach (DataRow row in dt.Rows)
+            {
+                // Create a new object
+
+                // Get the type of object (wrapper) to create
+                Type elementType = Type.GetType("SuperView_console.WrapperSQLSERVER",true);
+                Object wrapper = Activator.CreateInstance(elementType, row["Name"].ToString(), row["ConnectionString"].ToString(), Int32.Parse(row["ID"].ToString()));
+
+                // Add the object to the dictionary (if it already exists then overwrite)
+                if (dataSources.ContainsKey(row["Name"].ToString()))
+                {
+                    dataSources[row["Name"].ToString()] = (Wrapper)wrapper;
+                }
+                else
+                {
+                    dataSources.Add(row["Name"].ToString(), (Wrapper)wrapper);
+                }
+            }
         }
 
         // Function to display a DataTable in the console

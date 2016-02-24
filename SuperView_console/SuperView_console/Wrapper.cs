@@ -12,13 +12,21 @@ namespace SuperView_console
     {      
         // Private variables used to store information on a wrapper
         private string dataSourceName;
+        private int dataSourceID;
         private string connectionString;
 
         // Constructor for a wrapper
-        public Wrapper(string newDataSourceName, string newConnectionString)
+        public Wrapper(string newDataSourceName, string newConnectionString, int dataSourceID = -1)
         {            
             this.dataSourceName = newDataSourceName;
             this.connectionString = newConnectionString;
+            this.dataSourceID = dataSourceID;
+        }
+
+        // Getter for the data source name
+        public string getName()
+        {
+            return dataSourceName;
         }
 
         // Getter for the connection string of the wrapper
@@ -52,9 +60,9 @@ namespace SuperView_console
         }
 
         // Get columns
-        public virtual DataTable getColumns(string tableName)
+        public virtual Dictionary<string, string> getColumns(string tableName)
         {
-            return new DataTable();
+            return new Dictionary<string, string>();
         }
 
         //Get the status of a data source

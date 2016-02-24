@@ -16,7 +16,6 @@ namespace SuperView_console
         // Variable to control whether debug write is enabled/disabled
         static bool debug = true;
 
-
         // Function to write a data source into the database
         public static bool storeDataSource(string dataSourceName, string connectionString, string wrapper)
         {
@@ -63,13 +62,13 @@ namespace SuperView_console
         }
 
         // Function to store a data source table in the database
-        public static bool storeDataSourceTable(string dataSourceName, string tableName)
+        public static bool storeTable(string dataSourceName, string tableName)
         {
             // Set up a new connection to the local db and connect
             SqlCeConnection dbConnection = connectToLocalDatabase();
 
             // Check that this data source doesn't already exist
-            if (getDataSource(dataSourceName).Rows.Count > 0)
+            if (getDataSourceTables(dataSourceName).Rows.Count > 0)
             {
                 return false;
             }
@@ -86,7 +85,7 @@ namespace SuperView_console
                 VALUES (@DataSource, @Name)", dbConnection);
 
                 // Add our parameters
-                dbCmd.Parameters.AddWithValue("DataSouce", dataSourceID);
+                dbCmd.Parameters.AddWithValue("DataSource", dataSourceID);
                 dbCmd.Parameters.AddWithValue("Name", tableName);
 
                 // Try to add the data source to the database
@@ -216,6 +215,15 @@ namespace SuperView_console
             return getLocalDatabaseData(dbCmd);
         }
 
+        // Get the tables for a specific data source
+        public static DataTable getDataSourceTables(string dataSourceName)
+        {
+            SqlCeCommand dbCmd = new SqlCeCommand("SELECT * FROM DataSourceTables WHERE DataSource = @DataSource");
+            dbCmd.Parameters.AddWithValue("DataSource", getDataSourceID(dataSourceName));
+
+            return getLocalDatabaseData(dbCmd);
+        }
+
         /********************************************************
          * MAPPINGS
          ******************************************************** */
@@ -246,10 +254,74 @@ namespace SuperView_console
             return getLocalDatabaseData(dbCmd);
         }
 
+        // Get all of the mappings for a data source
+        public static DataTable getMappingsForDataSource(string dataSourceName)
+        {
+            SqlCeCommand dbCmd = new SqlCeCommand(@"
+                    SELECT * FROM Mappings 
+                    WHERE 
+                        SourceDataSource = @SourceDataSource");
+            dbCmd.Parameters.AddWithValue("SourceDataSource", getDataSourceID(dataSourceName));
+
+            return getLocalDatabaseData(dbCmd);
+        }
+
+        // Get all of the mappings for a table
+        public static DataTable getMappingsForTable(string dataSourceName, string tableName)
+        {
+            SqlCeCommand dbCmd = new SqlCeCommand(@"
+                    SELECT * FROM Mappings 
+                    WHERE 
+                        SourceDataSource = @SourceDataSource
+                        AND SourceTable = @SourceTable");
+            dbCmd.Parameters.AddWithValue("SourceDataSource", getDataSourceID(dataSourceName));
+            dbCmd.Parameters.AddWithValue("SourceTable", getTableID(dataSourceName, tableName));
+
+            return getLocalDatabaseData(dbCmd);
+        }
+
+        // Get all of the mappings in the system
+        public static DataTable getAllMappings()
+        {
+            SqlCeCommand dbCmd = new SqlCeCommand(@"
+                    SELECT * FROM Mappings");
+
+            return getLocalDatabaseData(dbCmd);
+        }
+
+        // Removes the mappings for a table
+        public static void deleteMappingsForTable(string dataSourceName, string tableName)
+        {
+            SqlCeCommand dbCmd = new SqlCeCommand(@"
+                    DELETE FROM Mappings 
+                    WHERE 
+                        SourceDataSource = @SourceDataSource
+                        AND SourceTable = @SourceTable");
+
+            dbCmd.Parameters.AddWithValue("SourceDataSource", getDataSourceID(dataSourceName));
+            dbCmd.Parameters.AddWithValue("SourceTable", getTableID(dataSourceName, tableName));
+
+            getLocalDatabaseData(dbCmd);
+        }
 
         /********************************************************
          * GENERAL FUNCTIONS
          ******************************************************** */
+
+        public static void resetLocalDatabase()
+        {
+            // Delete data sources
+            SqlCeCommand dbCmd = new SqlCeCommand("DELETE FROM DataSources");
+            getLocalDatabaseData(dbCmd);
+            
+            // Delete data source tables
+            dbCmd = new SqlCeCommand("DELETE FROM DataSourceTables");
+            getLocalDatabaseData(dbCmd);
+
+            // Delete mappings
+            dbCmd = new SqlCeCommand("DELETE FROM Mappings");
+            getLocalDatabaseData(dbCmd);
+        }
 
         // General function to query and return data based on a SqlCeCommand passed in
         public static DataTable getLocalDatabaseData(SqlCeCommand inputDbCmd)

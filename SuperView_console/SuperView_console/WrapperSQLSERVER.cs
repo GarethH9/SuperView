@@ -12,7 +12,7 @@ namespace SuperView_console
     {
         private SqlConnection dbConnection;
 
-        public WrapperSQLSERVER(string newDataSourceName, string newConnectionString) : base(newDataSourceName, newConnectionString)
+        public WrapperSQLSERVER(string newDataSourceName, string newConnectionString, int newDataSourceID = -1) : base(newDataSourceName, newConnectionString, newDataSourceID)
         {
             // Build a new SQL connection
             dbConnection = new SqlConnection();
@@ -105,12 +105,30 @@ namespace SuperView_console
             return tables;
         }
 
-        public override DataTable getColumns(string tableName)
+        public override Dictionary<string, string> getColumns(string tableName)
         {
             string[] restrictions = new string[4];
             restrictions[2] = tableName;
 
-            return new DataTable();
+            // Open the connection
+            this.connect();
+
+            // Get the columns
+            DataTable results = dbConnection.GetSchema("Columns", restrictions);
+            
+            // Create a dictionary to store the results
+            Dictionary<string, string> columns = new Dictionary<string, string>();
+
+            // Create a new data table with just the columns we need
+            foreach (DataRow row in results.Rows)
+            {
+                columns.Add(row["column_name"].ToString(), row["data_type"].ToString());
+            }
+
+            // Disconnect
+            this.disconnect();
+
+            return columns;
         }
     }
 }
