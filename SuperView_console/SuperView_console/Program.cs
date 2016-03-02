@@ -137,6 +137,8 @@ namespace SuperView_console
         // Function to start the SuperView system including initialising and mapping all defined data sources
         static void startSuperView()
         {
+            string response;
+            
             Console.WriteLine("Loading data source configurations...");
 
             // Load the data source definitions and create the required objects
@@ -154,10 +156,10 @@ namespace SuperView_console
                 Console.WriteLine("Data Source: " + wrapper.getName() + " (ID: " + wrapper.getID().ToString() + ")");
                 Console.Write("Would you like to configure mappings for this data source? (Y/N): ");
 
-                string value = Console.ReadLine();
+                string reponse = Console.ReadLine();
 
                 // Perform the mappings
-                if (value.ToString().ToLower() == "y")
+                if (reponse.ToString().ToLower() == "y")
                 {
                     // Map the tables
                     Console.WriteLine("Mapping tables...");
@@ -174,7 +176,7 @@ namespace SuperView_console
                         {
                             // Ask the user if they want to map the table
                             Console.Write("Would you like to map the '" + table + "' table? (Y/N): ");
-                            string response = Console.ReadLine().ToString();
+                            response = Console.ReadLine().ToString();
 
                             // If they do then map the table
                             if (response.ToLower() == "y")
@@ -225,6 +227,40 @@ namespace SuperView_console
                     }
 
                 }
+            }
+
+            Console.WriteLine("");
+
+            // Set up relations
+            Console.WriteLine("Creating relations...");
+
+            Console.Write("Would you like to add a relation? (Y/N): ");
+            response = Console.ReadLine();
+
+            // While the user wants to add more relations
+            while (response.ToString().ToLower() == "y")
+            {
+                // Get all of the mappings we have produced
+                DataTable mappings = MappingEngine.getMappings();
+
+                // Display the mappings (along with their ID)
+                foreach (DataRow mapping in mappings.Rows)
+                {
+                    string dataSourceName = Utilities.getDataSourceName((int)mapping["sourceDataSource"]);
+                    string tableName = Utilities.getTableName((int)mapping["sourceTable"]);
+                    Console.WriteLine("ID: " + mapping["ID"].ToString() + " Name: " + mapping["targetName"].ToString() + " (Data Source: " + dataSourceName + "| Table: " + tableName + " Table ID: " + mapping["sourceTable"]+ ")");
+                }
+
+                Console.Write("Enter table 1 ID: ");
+                int table1 = Int32.Parse(Console.ReadLine().ToString());
+                Console.Write("Enter table 2 ID: ");
+                int table2 = Int32.Parse(Console.ReadLine().ToString());
+                Console.Write("Enter relation (E.g. ID = ID): ");
+                string relation = Console.ReadLine().ToString();
+
+                // Check if the user wants to make another mapping
+                Console.Write("Would you like to add a relation? (Y/N): ");
+                response = Console.ReadLine();
             }
         }
 

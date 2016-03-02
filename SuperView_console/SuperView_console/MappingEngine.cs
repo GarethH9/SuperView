@@ -89,6 +89,20 @@ namespace SuperView_console
                 return Utilities.getAllMappings();
             }
         }
+
+        // Store a new relation
+        public static bool storeRelation(int table1, int table2, string relation)
+        {
+            Utilities.storeRelation(table1, table2, relation);
+
+            return true;
+        }
+
+        // Get relations for a table
+        public static DataTable getRelationsForTable(int tableID)
+        {
+            return Utilities.getRelationsForTable(tableID);
+        }
  
         //Get fields from data source
 

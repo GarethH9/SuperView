@@ -329,6 +329,60 @@ namespace SuperView_console
         }
 
         /********************************************************
+         * RELATIONS
+         ******************************************************** */
+
+        // Writes a relation to the database
+        public static bool storeRelation(int table1, int table2, string relation)
+        {
+            // Set up a new connection to the local db and connect
+            SqlCeConnection dbConnection = connectToLocalDatabase();
+
+            // Create a new command
+            SqlCeCommand dbCmd = new SqlCeCommand(@"
+                INSERT INTO Relations
+                    (Table1, Table2, Relation)
+                VALUES (@Table1, @Table2, @Relation)", dbConnection);
+
+            // Add our parameters
+            dbCmd.Parameters.AddWithValue("Table1", table1);
+            dbCmd.Parameters.AddWithValue("Table2", table2);
+            dbCmd.Parameters.AddWithValue("Relation", relation);
+
+            // Try to add the data source to the database
+            try
+            {
+                dbCmd.ExecuteNonQuery();
+            }
+            // Catch the exception if it occurs and return false
+            catch (SqlCeException ex)
+            {
+                Program.writeToDebug("Connection failed: " + ex.Message);
+                return false;
+            }
+
+            // Finish up and return success
+            disconnectFromLocalDatabase(dbConnection);
+
+            return true;
+        }
+
+        // Get all relations for a table
+        public static DataTable getRelationsForTable(int tableID)
+        {
+            SqlCeCommand dbCmd = new SqlCeCommand(@"
+                    SELECT * FROM Relations 
+                    WHERE 
+                        Table1 = @Table1
+                        OR Table2 = @Table2");
+            dbCmd.Parameters.AddWithValue("Table1", tableID);
+            dbCmd.Parameters.AddWithValue("Table2", tableID);
+
+            return getLocalDatabaseData(dbCmd);
+        }
+
+
+        /********************************************************
          * GENERAL FUNCTIONS
          ******************************************************** */
 
@@ -344,6 +398,10 @@ namespace SuperView_console
 
             // Delete mappings
             dbCmd = new SqlCeCommand("DELETE FROM Mappings");
+            getLocalDatabaseData(dbCmd);
+
+            // Delete relations
+            dbCmd = new SqlCeCommand("DELETE FROM Relations");
             getLocalDatabaseData(dbCmd);
         }
 
