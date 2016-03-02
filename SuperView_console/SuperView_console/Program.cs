@@ -112,12 +112,12 @@ namespace SuperView_console
 
             // GET COLUMNS TEST
             Console.WriteLine("GET COLUMNS TEST");
-            Dictionary<string, string> columns = SuperViewTest.getColumns("Test");
+            Dictionary<string, Dictionary<string, string>> columns = SuperViewTest.getColumns("Test");
 
             // Display the columns
-            foreach (KeyValuePair<string, string> column in columns)
+            foreach (KeyValuePair<string, Dictionary<string,string>> column in columns)
             {
-                Console.WriteLine("Column Name: " + column.Key.ToString() + " Data Type: " + column.Value.ToString());
+                Console.WriteLine("Column Name: " + column.Key.ToString() + " Data Type: " + column.Value["data_type"].ToString());
             }
             //DisplayDataTable(columns);
 
@@ -134,6 +134,7 @@ namespace SuperView_console
 
         }
 
+        // Function to start the SuperView system including initialising and mapping all defined data sources
         static void startSuperView()
         {
             Console.WriteLine("Loading data source configurations...");
@@ -205,9 +206,9 @@ namespace SuperView_console
                         else
                         {
                             // Loop through each column in the data source
-                            foreach (KeyValuePair<string, string> column in wrapper.getColumns(table))
+                            foreach (KeyValuePair<string, Dictionary<string, string>> column in wrapper.getColumns(table))
                             {
-                                Console.WriteLine("Column Name: " + column.Key.ToString() + " | Data Type: " + column.Value.ToString());
+                                Console.WriteLine("Column Name: " + column.Key.ToString() + " | Data Type: " + column.Value["data_type"].ToString());
                                 Console.Write("Enter a mapping name for this column (leave blank to ignore): ");
                                 string mappingName = Console.ReadLine().ToString();
 

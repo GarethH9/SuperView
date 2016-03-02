@@ -66,9 +66,9 @@ namespace SuperView_console
         }
 
         // Get columns
-        public virtual Dictionary<string, string> getColumns(string tableName)
+        public virtual Dictionary<string, Dictionary<string,string>> getColumns(string tableName)
         {
-            return new Dictionary<string, string>();
+            return new Dictionary<string, Dictionary<string,string>>();
         }
 
         //Get the status of a data source

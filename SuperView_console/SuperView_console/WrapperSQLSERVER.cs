@@ -105,7 +105,7 @@ namespace SuperView_console
             return tables;
         }
 
-        public override Dictionary<string, string> getColumns(string tableName)
+        public override Dictionary<string, Dictionary<string,string>> getColumns(string tableName)
         {
             string[] restrictions = new string[4];
             restrictions[2] = tableName;
@@ -117,12 +117,14 @@ namespace SuperView_console
             DataTable results = dbConnection.GetSchema("Columns", restrictions);
             
             // Create a dictionary to store the results
-            Dictionary<string, string> columns = new Dictionary<string, string>();
+            Dictionary<string, Dictionary<string,string>> columns = new Dictionary<string, Dictionary<string,string>>();
 
             // Create a new data table with just the columns we need
             foreach (DataRow row in results.Rows)
             {
-                columns.Add(row["column_name"].ToString(), row["data_type"].ToString());
+                Dictionary<string,string> column_parameters = new Dictionary<string,string>();
+                column_parameters.Add("data_type",row["data_type"].ToString());
+                columns.Add(row["column_name"].ToString(), column_parameters);
             }
 
             // Disconnect
