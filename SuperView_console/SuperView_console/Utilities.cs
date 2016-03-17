@@ -256,6 +256,7 @@ namespace SuperView_console
         public static DataTable getMappingSource(string targetName)
         {
             SqlCeCommand dbCmd = new SqlCeCommand("SELECT * FROM Mappings WHERE TargetName = @TargetName");
+            dbCmd.Parameters.AddWithValue("TargetName", targetName);
 
             return getLocalDatabaseData(dbCmd);
         }
@@ -291,7 +292,7 @@ namespace SuperView_console
         }
 
         // Get all of the mappings for a table
-        public static DataTable getMappingsForTable(string dataSourceName, string tableName)
+        public static DataTable getMappingsForTable(string dataSourceName, int tableID)
         {
             SqlCeCommand dbCmd = new SqlCeCommand(@"
                     SELECT * FROM Mappings 
@@ -299,7 +300,7 @@ namespace SuperView_console
                         SourceDataSource = @SourceDataSource
                         AND SourceTable = @SourceTable");
             dbCmd.Parameters.AddWithValue("SourceDataSource", getDataSourceID(dataSourceName));
-            dbCmd.Parameters.AddWithValue("SourceTable", getTableID(dataSourceName, tableName));
+            dbCmd.Parameters.AddWithValue("SourceTable", tableID);
 
             return getLocalDatabaseData(dbCmd);
         }
@@ -333,7 +334,7 @@ namespace SuperView_console
          ******************************************************** */
 
         // Writes a relation to the database
-        public static bool storeRelation(int table1, int table2, string relation)
+        public static bool storeRelation(int table1, int table2, string column1, string column2)
         {
             // Set up a new connection to the local db and connect
             SqlCeConnection dbConnection = connectToLocalDatabase();
@@ -341,13 +342,14 @@ namespace SuperView_console
             // Create a new command
             SqlCeCommand dbCmd = new SqlCeCommand(@"
                 INSERT INTO Relations
-                    (Table1, Table2, Relation)
-                VALUES (@Table1, @Table2, @Relation)", dbConnection);
+                    (Table1, Table2, Column1, Column2)
+                VALUES (@Table1, @Table2, @Column1, @Column2)", dbConnection);
 
             // Add our parameters
             dbCmd.Parameters.AddWithValue("Table1", table1);
             dbCmd.Parameters.AddWithValue("Table2", table2);
-            dbCmd.Parameters.AddWithValue("Relation", relation);
+            dbCmd.Parameters.AddWithValue("Column1", column1);
+            dbCmd.Parameters.AddWithValue("Column2", column2);
 
             // Try to add the data source to the database
             try
@@ -423,7 +425,15 @@ namespace SuperView_console
 
             // Create a new DataTable we will use to hold the results
             DataTable results = new DataTable();
-            results.Load(dbReader);
+
+            try
+            {
+                results.Load(dbReader);
+            }
+            catch (SqlCeException ex)
+            {
+                Program.writeToDebug("Read failed: " + ex.Message);
+            }
 
             // Close the reader
             dbReader.Close();

@@ -59,6 +59,12 @@ namespace SuperView_console
             return new DataTable();
         }
 
+        // Function which returns a DataTable of results for the specified set of columns using the WHERE clause
+        public virtual DataTable queryWithWhere(List<string> columns, List<string> tables, Dictionary<string, Dictionary<string, string>> where = null)
+        {
+            return new DataTable();
+        }
+
         // Get tables
         public virtual IList<string> getTables()
         {

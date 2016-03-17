@@ -65,21 +65,52 @@ namespace SuperView_console
             // Open the connection
             this.connect();
 
-            // Execute the query and return the data to the reader
-            dbReader = dbCmd.ExecuteReader();
-
             // Create a new DataTable we will use to hold the results
             DataTable results = new DataTable();
-            results.Load(dbReader);
 
-            // Close the reader
-            dbReader.Close();
+            try
+            {
+                // Execute the query and return the data to the reader
+                dbReader = dbCmd.ExecuteReader();
+                results.Load(dbReader);
+
+                // Close the reader
+                dbReader.Close();
+            }
+            catch (SqlException ex)
+            {
+                Program.writeToDebug("Query failed: " + ex.Message);
+            }
 
             // Close the connection
             this.disconnect();
 
             // Return the DataTable containing the results
             return results;
+        }
+
+        public override DataTable queryWithWhere(List<string> columns, List<string> tables, Dictionary<string, Dictionary<string, string>> where = null)
+        {
+            string qColumns = String.Join(", ", columns.ToArray());
+            string qTables = String.Join(", ", tables.ToArray());
+            string qWhere = "";
+
+            if (where != null)
+            {
+                qWhere = " WHERE ";
+
+                //Loop through the where parameter and build up a WHERE clause
+                foreach (KeyValuePair<string, Dictionary<string, string>> whereSegment in where)
+                {
+                    qWhere += whereSegment.Key.ToString() + " " + whereSegment.Value["operator"].ToString() + " '" + whereSegment.Value["value"].ToString() + "'";
+                }
+            }
+
+            string query = "SELECT " + qColumns + " FROM " + qTables + qWhere;
+
+            Console.WriteLine(query);
+
+            return this.query(query);
         }
 
         public override IList<string> getTables()
@@ -132,5 +163,7 @@ namespace SuperView_console
 
             return columns;
         }
+
+
     }
 }

@@ -20,6 +20,8 @@ namespace SuperView_console
             // Launch the program
             Console.WriteLine("Welcome to SuperView \n");
 
+            createDataSourceObjects();
+
             // Display the menu of SuperView options
             showMenu();
         }
@@ -31,10 +33,11 @@ namespace SuperView_console
             Console.WriteLine("SuperView Options:");
             Console.WriteLine("1. System demo");
             Console.WriteLine("2. System test");
-            Console.WriteLine("3. Start system");
+            Console.WriteLine("3. Create mappings");
             Console.WriteLine("4. Use Superview");
-            Console.WriteLine("5. Reset");
-            Console.WriteLine("6. Exit");
+            Console.WriteLine("5. View mappings");
+            Console.WriteLine("6. Reset");
+            Console.WriteLine("7. Exit");
             Console.Write("Please enter a number: ");
 
             switch (Console.ReadLine())
@@ -59,10 +62,14 @@ namespace SuperView_console
                     showMenu();
                     break;
                 case "5":
-                    reset();
+                    showMappings();
                     showMenu();
                     break;
                 case "6":
+                    reset();
+                    showMenu();
+                    break;
+                case "7":
                     exitSystem();
                     break;
                 default:
@@ -77,7 +84,7 @@ namespace SuperView_console
         static void testSystem()
         {
             // Create a new SQLSERVER wrapper
-            WrapperSQLSERVER SuperViewTest = new WrapperSQLSERVER("SuperViewTest", "Data Source=(local);Initial Catalog=SuperView;User id=sa;Password=Pa55w0rd;");
+            WrapperSQLSERVER SuperViewTest = new WrapperSQLSERVER("PatientMealChoices", "Data Source=(local);Initial Catalog=PatientMealChoices;User id=sa;Password=Pa55w0rd;");
 
             // Attempt a connection to the database
             if (SuperViewTest.connect())
@@ -88,7 +95,7 @@ namespace SuperView_console
 
             // QUERY TEST
             Console.WriteLine("QUERY TEST");
-            string query = "SELECT * FROM Test;";
+            string query = "SELECT * FROM Patients;";
             Console.WriteLine("Query: " + query);
 
             // Query the database
@@ -127,7 +134,7 @@ namespace SuperView_console
 
             //MAPPING ENGINE TEST
             Console.WriteLine("MAPPING ENGINE TEST");
-            results = MappingEngine.queryWrapper(SuperViewTest, "SELECT * FROM Test");
+            results = MappingEngine.queryWrapper(SuperViewTest, "SELECT * FROM Patients WHERE NHSNumber = '1111111111'");
 
             DisplayDataTable(results);
             //END MAPPING ENGINE TEST
@@ -198,10 +205,11 @@ namespace SuperView_console
                     // Loop through every table that we have mapped for this data source
                     foreach (DataRow mapping in MappingEngine.getMappedTables(wrapper).Rows)
                     {
+                        int tableID = (int)mapping["ID"];
                         string table = mapping["Name"].ToString();
                         
                         // Check if there are any mappings for this table, if there are then we can't change them
-                        if (MappingEngine.getMappings(wrapper, table).Rows.Count > 0)
+                        if (MappingEngine.getMappings(wrapper, tableID).Rows.Count > 0)
                         {
                             Console.WriteLine("Mappings already exist for the '" + table + "' table.");
                         }
@@ -222,7 +230,7 @@ namespace SuperView_console
 
                                 Console.WriteLine("");
                             }
-                            Console.WriteLine(MappingEngine.getMappings(wrapper, table).Rows.Count.ToString() + " field(s) mapped");
+                            Console.WriteLine(MappingEngine.getMappings(wrapper, tableID).Rows.Count.ToString() + " field(s) mapped");
                         }
                     }
 
@@ -255,12 +263,43 @@ namespace SuperView_console
                 int table1 = Int32.Parse(Console.ReadLine().ToString());
                 Console.Write("Enter table 2 ID: ");
                 int table2 = Int32.Parse(Console.ReadLine().ToString());
-                Console.Write("Enter relation (E.g. ID = ID): ");
-                string relation = Console.ReadLine().ToString();
+                Console.Write("Enter relation for column 1 (E.g. {ID}): ");
+                string column1 = Console.ReadLine().ToString();
+                Console.Write("Enter relation for column 2 (E.g. {ID}): ");
+                string column2 = Console.ReadLine().ToString();
+
+                //Store the relation
+                MappingEngine.storeRelation(table1, table2, column1, column2);
 
                 // Check if the user wants to make another mapping
                 Console.Write("Would you like to add a relation? (Y/N): ");
                 response = Console.ReadLine();
+            }
+        }
+
+        //Function to display all the mappings
+        public static void showMappings()
+        {
+            //Loop through all of the wrappers and output their names
+            Console.WriteLine("Wrappers...");
+
+            foreach (KeyValuePair<string, Wrapper> dataSource in dataSources)
+            {
+                Console.WriteLine(dataSource.Key.ToString());
+            }
+
+            Console.WriteLine("");
+            Console.WriteLine("Mappings...");
+            
+            // Get all of the mappings we have produced
+            DataTable mappings = MappingEngine.getMappings();
+
+            // Display the mappings (along with their ID)
+            foreach (DataRow mapping in mappings.Rows)
+            {
+                string dataSourceName = Utilities.getDataSourceName((int)mapping["sourceDataSource"]);
+                string tableName = Utilities.getTableName((int)mapping["sourceTable"]);
+                Console.WriteLine("ID: " + mapping["ID"].ToString() + " Name: " + mapping["targetName"].ToString() + " (Data Source: " + dataSourceName + "| Table: " + tableName + " Table ID: " + mapping["sourceTable"] + ")");
             }
         }
 
@@ -279,6 +318,13 @@ namespace SuperView_console
                 string tableName = Utilities.getTableName((int)mapping["sourceTable"]);
                 Console.WriteLine(mapping["targetName"].ToString() + " (Data Source: " + dataSourceName + "| Table: " + tableName + ")");
             }
+
+            Console.WriteLine("");
+
+            Console.Write("Enter query: ");
+            Dictionary<string, DataTable> results = QueryEngine.query(Console.ReadLine().ToString());
+            DataTable output = QueryEngine.joinData(results);
+
         }
 
         // Function to reset SuperView
@@ -298,7 +344,7 @@ namespace SuperView_console
         public static void loadDataSourceDefinitions()
         {
             // Add data sources to the local database
-            Utilities.storeDataSource("SuperViewTest", "Data Source=(local);Initial Catalog=SuperView;User id=sa;Password=Pa55w0rd;", "WrapperSQLSERVER");
+            Utilities.storeDataSource("SuperViewTest", "Data Source=(local);Initial Catalog=SuperViewTest;User id=sa;Password=Pa55w0rd;", "WrapperSQLSERVER");
 
             Utilities.storeDataSource("PatientMealChoices", "Data Source=(local);Initial Catalog=PatientMealChoices;User id=sa;Password=Pa55w0rd;", "WrapperSQLSERVER");
 
@@ -370,7 +416,7 @@ namespace SuperView_console
             Console.WriteLine("");
 
             //Create a new data source
-            DataSource SuperViewTest = new DataSource("SuperView Test", "Data Source=(local);Initial Catalog=SuperView;User id=sa;Password=Pa55w0rd;");
+            DataSource SuperViewTest = new DataSource("SuperView Test", "Data Source=(local);Initial Catalog=SuperViewTest;User id=sa;Password=Pa55w0rd;");
 
             //Connect to the database
             Console.WriteLine("Attempting to connect to the database... \n");
