@@ -132,6 +132,11 @@ namespace SuperView_console
         {
             return Utilities.getRelationsForTable(tableID);
         }
+
+        public static DataTable getRelationsForDataSource(int dataSourceID)
+        {
+            return Utilities.getRelationsForDataSource(dataSourceID);
+        }
  
         //Get fields from data source
 

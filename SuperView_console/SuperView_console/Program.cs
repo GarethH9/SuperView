@@ -37,7 +37,8 @@ namespace SuperView_console
             Console.WriteLine("4. Use Superview");
             Console.WriteLine("5. View mappings");
             Console.WriteLine("6. Reset");
-            Console.WriteLine("7. Exit");
+            Console.WriteLine("7. Test");
+            Console.WriteLine("8. Exit");
             Console.Write("Please enter a number: ");
 
             switch (Console.ReadLine())
@@ -70,6 +71,10 @@ namespace SuperView_console
                     showMenu();
                     break;
                 case "7":
+                    test();
+                    showMenu();
+                    break;
+                case "8":
                     exitSystem();
                     break;
                 default:
@@ -79,6 +84,14 @@ namespace SuperView_console
                     break;
 
             }
+        }
+
+        public static void test()
+        {
+            // Get the relations for this table
+            DataTable relations = MappingEngine.getRelationsForDataSource(dataSources["PatientMealChoices"].getID());
+
+            Program.DisplayDataTable(relations);
         }
 
         static void testSystem()
@@ -322,7 +335,7 @@ namespace SuperView_console
             Console.WriteLine("");
 
             Console.Write("Enter query: ");
-            Dictionary<string, DataTable> results = QueryEngine.query(Console.ReadLine().ToString());
+            Dictionary<Wrapper, DataTable> results = QueryEngine.query(Console.ReadLine().ToString());
             DataTable output = QueryEngine.joinData(results);
 
         }

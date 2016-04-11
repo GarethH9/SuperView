@@ -383,6 +383,19 @@ namespace SuperView_console
             return getLocalDatabaseData(dbCmd);
         }
 
+        // Get all the relations for a data source
+        public static DataTable getRelationsForDataSource(int dataSourceID)
+        {
+            SqlCeCommand dbCmd = new SqlCeCommand(@"
+                    SELECT Relations.*, Table1.DataSource AS DataSource1, Table2.DataSource AS DataSource2 
+                    FROM Relations 
+                    INNER JOIN DataSourceTables Table1 ON Table1.ID = Relations.Table1
+                    INNER JOIN DataSourceTables Table2 ON Table2.ID = Relations.Table2");
+            dbCmd.Parameters.AddWithValue("DataSourceID", dataSourceID);
+
+            return getLocalDatabaseData(dbCmd);
+        }
+
 
         /********************************************************
          * GENERAL FUNCTIONS
@@ -418,25 +431,27 @@ namespace SuperView_console
             dbCmd.Connection = dbConnection;
 
             // Create a new reader
-            SqlCeDataReader dbReader;
-
-            // Execute the query and return the data to the reader
-            dbReader = dbCmd.ExecuteReader();
+            SqlCeDataReader dbReader;         
 
             // Create a new DataTable we will use to hold the results
             DataTable results = new DataTable();
 
             try
             {
+                // Execute the query and return the data to the reader
+                dbReader = dbCmd.ExecuteReader();
+
                 results.Load(dbReader);
+
+                // Close the reader
+                dbReader.Close();
             }
             catch (SqlCeException ex)
             {
                 Program.writeToDebug("Read failed: " + ex.Message);
             }
 
-            // Close the reader
-            dbReader.Close();
+            
 
             // Close the connection
             disconnectFromLocalDatabase(dbConnection);
